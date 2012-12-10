@@ -1,8 +1,10 @@
 from django.db import models
 from datetime import datetime
+from django.contrib.auth.models import User
 from email.utils import formataddr
 
 # Create your models here.
+
 
 class Confirmation(models.Model):
     from_address = models.EmailField()
@@ -14,6 +16,7 @@ class Confirmation(models.Model):
     def __unicode__(self):
         return self.from_address
 
+
 class UserState(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     state_key = models.CharField(max_length=512)
@@ -23,6 +26,22 @@ class UserState(models.Model):
     def __unicode__(self):
         return "%s:%s (%s)" % (self.state_key, self.from_address, self.state)
 
+
+class Domain(models.Model):
+    created_on = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=512)
+    owners = models.ManyToManyField(User)
+
+    class Meta:
+        permissions = (
+            ("can_manage_subscriptions", "Can manage subscriptions"),
+            ("can_manage_lists", "Can manage lists"),
+            )
+
+    def __unicode__(self):
+        return self.name
+
+
 class MailingList(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     archive_url = models.CharField(max_length=512)
@@ -30,6 +49,14 @@ class MailingList(models.Model):
     name = models.CharField(max_length=512)
     similarity_pri = models.CharField(max_length=50)
     similarity_sec = models.CharField(max_length=50, null=True)
+    owners = models.ManyToManyField(User)
+    domain = models.ForeignKey(Domain)
+
+    class Meta:
+        permissions = (
+                ("can_manage_subscriptions", "Can manage subscriptions"),
+                ("can_manage_lists", "Can manage lists"),
+                )
 
     def __unicode__(self):
         return self.name
