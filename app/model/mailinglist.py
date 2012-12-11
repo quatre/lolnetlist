@@ -6,37 +6,44 @@ from config import settings
 from lib import metaphone
 import Stemmer
 
+
 def stem_and_meta(list_name):
     s = Stemmer.Stemmer('english')
     name = " ".join(s.stemWords(list_name.split('.')))
     return metaphone.dm(name)
 
-def create_list(list_name):
+
+def create_list(list_name, domain_name):
     list_name = list_name.lower()
-    mlist = find_list(list_name)
+    mlist = find_list(list_name, domain_name)
     sim_pri, sim_sec = stem_and_meta(list_name)
 
     if not mlist:
-        mlist = MailingList(archive_url = "/archives/" + list_name,
-                            archive_queue = "/queues/" + list_name,
-                            name=list_name,
-                            similarity_pri = sim_pri,
-                            similarity_sec = sim_sec)
+        mlist = MailingList(
+                archive_url="/archives/%s/%s" % (domain_name, list_name),
+                archive_queue="/queues/%s/%s" % (domain_name, list_name),
+                name=list_name,
+                similarity_pri=sim_pri,
+                similarity_sec=sim_sec)
         mlist.save()
-
     return mlist
 
-def delete_list(list_name):
-    MailingList.objects.filter(name = list_name).delete()
 
-def find_list(list_name):
-    mlists = MailingList.objects.filter(name = list_name)
+def delete_list(list_name, domain_name):
+    MailingList.objects.filter(name=list_name,
+            domain__name=domain_name).delete()
+
+
+def find_list(list_name, domain_name):
+    mlists = MailingList.objects.filter(name=list_name,
+                                        domain__name=domain_name)
     if mlists:
         return mlists[0]
     else:
         return None
 
-def add_subscriber(address, list_name):
+
+def add_subscriber(address, list_name, domain_name):
     mlist = create_list(list_name)
     sub_name, sub_addr = parseaddr(address)
     subs = find_subscriptions(address, list_name)
@@ -50,17 +57,17 @@ def add_subscriber(address, list_name):
     else:
         return subs[0]
 
-def remove_subscriber(address, list_name):
-    find_subscriptions(address, list_name).delete()
+def remove_subscriber(address, list_name, domain_name):
+    find_subscriptions(address, list_namei, domain_name).delete()
 
 def remove_all_subscriptions(address):
     find_subscriptions(address).delete()
 
-def find_subscriptions(address, list_name=None):
+def find_subscriptions(address, list_name=None, domain_name=None):
     sub_name, sub_addr = parseaddr(address)
 
     if list_name:
-        mlist = find_list(list_name)
+        mlist = find_list(list_name, domain_name)
     else:
         mlist = None
 
@@ -84,26 +91,25 @@ def post_message(relay, message, list_name, host):
 
     for sub in mlist.subscription_set.all().values('subscriber_address'):
         list_addr = "%s@%s" % (list_name, host)
-        delivery = craft_response(message, list_name, list_addr) 
+        delivery = craft_response(message, list_name, list_addr, host) 
         relay.deliver(delivery, To=sub['subscriber_address'], From=list_addr)
 
 
-def craft_response(message, list_name, list_addr):
+def craft_response(message, list_name, list_addr, host):
     response = MailResponse(To=list_addr, 
                             From=message['from'],
                             Subject=message['subject'])
-
     msg_id = message['message-id']
-
     response.update({
         "Sender": list_addr, 
         "Reply-To": list_addr,
         "List-Id": list_addr,
-        "List-Unsubscribe": "<mailto:%s-unsubscribe@librelist.com>" % list_name,
-        "List-Archive": "<http://librelist.com/archives/%s/>" % list_name,
+        "List-Unsubscribe": "<mailto:%s-unsubscribe@%s>" % (list_name, host),
+        "List-Archive": "<http://librelist.com/archives/%s/%s/>" % (list_name,
+            host),
         "List-Post": "<mailto:%s>" % list_addr,
         "List-Help": "<http://librelist.com/help.html>",
-        "List-Subscribe": "<mailto:%s-subscribe@librelist.com>" % list_name,
+        "List-Subscribe": "<mailto:%s-subscribe@%s>" % (list_name, host),
         "Return-Path": list_addr, 
         "Precedence": 'list',
     })
@@ -135,11 +141,11 @@ def disable_all_subscriptions(address):
 def enable_all_subscriptions(address):
     Subscription.objects.filter(subscriber_address=address).update(enabled=True)
 
-def similar_named_lists(list_name):
+def similar_named_lists(list_name, domain_name):
     sim_pri, sim_sec = stem_and_meta(list_name)
     sim_sec = sim_sec or sim_pri
 
     return MailingList.objects.filter(Q(similarity_pri = sim_pri) | 
                                        Q(similarity_sec =
-                                         sim_sec))
+                                         sim_sec), domain__name=domain_name)
 

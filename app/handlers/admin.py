@@ -102,7 +102,7 @@ def POSTING(message, list_name=None, action=None, host=None):
         mailinglist.post_message(relay, message, list_name, host)
         # archive makes sure it gets cleaned up before archival
         final_msg = mailinglist.craft_response(message, list_name, 
-                                               list_name + '@' + host)
+                                               list_name + '@' + host, host)
         archive.enqueue(list_name, final_msg)
         return POSTING
     
