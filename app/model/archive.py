@@ -22,8 +22,8 @@ FILE_MOD = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
 def day_of_year_path():
     return "%d/%0.2d/%0.2d" % datetime.today().timetuple()[0:3]
 
-def store_path(list_name, name):
-    datedir = os.path.join(settings.ARCHIVE_BASE, list_name, day_of_year_path())
+def store_path(list_name, domain_name, name):
+    datedir = os.path.join(settings.ARCHIVE_BASE, domain_name, list_name, day_of_year_path())
 
     if not os.path.exists(datedir):
         os.makedirs(datedir)
@@ -38,8 +38,8 @@ def fix_permissions(path):
         for f in files:
             os.chmod(os.path.join(root, f), FILE_MOD)
 
-def update_json(list_name, key, message):
-    jpath = store_path(list_name, 'json')
+def update_json(list_name, key, message, domain_name):
+    jpath = store_path(list_name, domain_name, 'json')
     json_file = key + ".json"
     json_archive = os.path.join(jpath, json_file)
 
@@ -52,15 +52,15 @@ def update_json(list_name, key, message):
     fix_permissions(jpath)
 
 
-def enqueue(list_name, message):
-    qpath = store_path(list_name, 'queue')
+def enqueue(list_name, domain_name, message):
+    qpath = store_path(list_name, domain_name, 'queue')
     pending = queue.Queue(qpath, safe=True)
     white_list_cleanse(message)
 
     key = pending.push(message)
     fix_permissions(qpath)
 
-    update_json(list_name, key, message)
+    update_json(list_name, key, message, domain_name)
     return key
 
 def white_list_cleanse(message):
