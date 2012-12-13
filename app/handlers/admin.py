@@ -33,7 +33,7 @@ def SPAMMING(message, **options):
 @route('(list_name)@(host)')
 @route('(list_name)-subscribe@(host)')
 @bounce_to(soft=bounce.BOUNCED_SOFT, hard=bounce.BOUNCED_HARD)
-@spam_filter(SPAM['db'], SPAM['rc'], SPAM['queue'], next_state=SPAMMING)
+#@spam_filter(SPAM['db'], SPAM['rc'], SPAM['queue'], next_state=SPAMMING)
 def START(message, list_name=None, host=None, bad_list=None):
     if bad_list:
         if '-' in bad_list:
@@ -55,14 +55,14 @@ def START(message, list_name=None, host=None, bad_list=None):
                      message['from'])
         return START
 
-    elif mailinglist.find_list(list_name):
+    elif mailinglist.find_list(list_name, host):
         action = "subscribe to"
         CONFIRM.send(relay, list_name, message, 'mail/confirmation.msg',
                           locals())
         return CONFIRMING_SUBSCRIBE
 
     else:
-        similar_lists = mailinglist.similar_named_lists(list_name)
+        similar_lists = mailinglist.similar_named_lists(list_name, host)
         CONFIRM.send(relay, list_name, message, 'mail/create_confirmation.msg',
                           locals())
 
