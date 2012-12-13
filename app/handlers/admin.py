@@ -20,8 +20,8 @@ def module_and_to(module_name, message):
         list_name = address.split('-')[0]
     else:
         list_name = address.split('@')[0]
-
-    return module_name + ':' + list_name
+    domain = address.split('@')[1]
+    return module_name + ':' + list_name + '@' + domain
 
 
 @route("(address)@(host)", address='.+')
