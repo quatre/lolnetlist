@@ -44,7 +44,7 @@ def find_list(list_name, domain_name):
 
 
 def add_subscriber(address, list_name, domain_name):
-    mlist = create_list(list_name)
+    mlist = create_list(list_name, domain_name)
     sub_name, sub_addr = parseaddr(address)
     subs = find_subscriptions(address, list_name, domain_name)
 
