@@ -17,6 +17,7 @@ def create_list(list_name, domain_name):
     list_name = list_name.lower()
     mlist = find_list(list_name, domain_name)
     sim_pri, sim_sec = stem_and_meta(list_name)
+    domain = Domain.objects.get(name=domain_name)
 
     if not mlist:
         mlist = MailingList(
@@ -24,7 +25,8 @@ def create_list(list_name, domain_name):
                 archive_queue="/queues/%s/%s" % (domain_name, list_name),
                 name=list_name,
                 similarity_pri=sim_pri,
-                similarity_sec=sim_sec)
+                similarity_sec=sim_sec,
+                domain=domain)
         mlist.save()
     return mlist
 
