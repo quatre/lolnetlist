@@ -88,7 +88,7 @@ def find_subscriptions(address, list_name=None, domain_name=None):
 
 
 def post_message(relay, message, list_name, host):
-    mlist = find_list(list_name)
+    mlist = find_list(list_name, host)
     assert mlist, "User is somehow able to post to list %s" % list_name
 
     for sub in mlist.subscription_set.all().values('subscriber_address'):
