@@ -107,7 +107,7 @@ def POSTING(message, list_name=None, action=None, host=None):
         # archive makes sure it gets cleaned up before archival
         final_msg = mailinglist.craft_response(message, list_name, 
                                                list_name + '@' + host, host)
-        archive.enqueue(list_name, final_msg)
+        archive.enqueue(list_name, host, final_msg)
         return POSTING
     
 
@@ -116,7 +116,7 @@ def CONFIRMING_UNSUBSCRIBE(message, list_name=None, id_number=None, host=None):
     original = CONFIRM.verify(list_name, message['from'], id_number)
 
     if original:
-        mailinglist.remove_subscriber(message['from'], list_name)
+        mailinglist.remove_subscriber(message['from'], list_name, host)
 
         msg = view.respond(locals(), 'mail/unsubscribed.msg',
                            From="noreply@%(host)s",
