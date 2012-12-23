@@ -36,6 +36,7 @@ def SPAMMING(message, **options):
 @spam_filter(SPAM['db'], SPAM['rc'], SPAM['queue'], next_state=SPAMMING)
 def START(message, list_name=None, host=None, bad_list=None):
     list_address = "%s@%s" % (list_name, host)
+    logging.debug("List : %s" % list_address)
     
     if bad_list:
         if '-' in bad_list:
@@ -65,6 +66,7 @@ def START(message, list_name=None, host=None, bad_list=None):
 
     else:
         similar_lists = mailinglist.similar_named_lists(list_name, host)
+        logging.debug("Creating list : %s" % list_address)
         CONFIRM.send(relay, list_address, message, 'mail/create_confirmation.msg',
                           locals())
 
