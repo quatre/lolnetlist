@@ -60,14 +60,14 @@ def START(message, list_name=None, host=None, bad_list=None):
 
     elif mailinglist.find_list(list_name, host):
         action = "subscribe to"
-        CONFIRM.send(relay, list_address, message, 'mail/confirmation.msg',
+        CONFIRM.send(relay, list_name, message, 'mail/confirmation.msg',
                           locals())
         return CONFIRMING_SUBSCRIBE
 
     else:
         similar_lists = mailinglist.similar_named_lists(list_name, host)
         logging.debug("Creating list : %s" % list_address)
-        CONFIRM.send(relay, list_address, message, 'mail/create_confirmation.msg',
+        CONFIRM.send(relay, list_name, message, 'mail/create_confirmation.msg',
                           locals())
 
         return CONFIRMING_SUBSCRIBE
@@ -77,7 +77,7 @@ def CONFIRMING_SUBSCRIBE(message, list_name=None, id_number=None, host=None):
     original = CONFIRM.verify(list_name, message['from'], id_number)
 
     if original:
-        mailinglist.add_subscriber(message['from'], list_name)
+        mailinglist.add_subscriber(message['from'], list_name, host)
 
         msg = view.respond(locals(), "mail/subscribed.msg",
                            From="noreply@%(host)s",
